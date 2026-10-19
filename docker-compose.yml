@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16
+    container_name: retail_pipeline_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-retail_db}
+      POSTGRES_USER: ${POSTGRES_USER:-retail_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_this_local_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - retail_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-retail_user} -d ${POSTGRES_DB:-retail_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  
+  pipeline:
+    build: .
+    container_name: retail_pipeline
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: db
+    volumes:
+      - ./data:/app/data
+
+
+volumes:
+  retail_postgres_data:
+

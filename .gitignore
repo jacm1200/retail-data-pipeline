@@ -1,0 +1,30 @@
+# Secretos
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Datos generados
+data/processed/*
+!data/processed/.gitkeep
+
+data/rejected/*
+!data/rejected/.gitkeep
+
+data/reports/*
+!data/reports/.gitkeep
+
+reports/*
+!reports/.gitkeep
+
+# Editores y sistema operativo
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
