@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from pathlib import Path
 from datetime import datetime, timezone
@@ -20,6 +21,8 @@ REQUIRED_COLUMNS = [
     "order_id", "order_date", "customer_id", "product",
     "quantity", "unit_price", "country"
 ]
+
+logger = logging.getLogger(__name__)
 
 
 def parse_price(value):
@@ -45,6 +48,7 @@ def parse_price(value):
 
 
 def load_raw_data(path: Path) -> pd.DataFrame:
+    logger.info("Reading input CSV: %s", path)
     if not path.exists():
         raise FileNotFoundError(f"Input CSV not found: {path}")
     df = pd.read_csv(path, dtype="string")
@@ -52,6 +56,7 @@ def load_raw_data(path: Path) -> pd.DataFrame:
     missing = sorted(set(REQUIRED_COLUMNS) - set(df.columns))
     if missing:
         raise ValueError(f"Missing required columns: {missing}")
+    logger.info("Read %d input records from %s", len(df), path)
     return df
 
 
@@ -141,6 +146,7 @@ def database_url() -> str:
 
 
 def load_to_postgres(df: pd.DataFrame) -> int:
+    logger.info("Loading %d valid records into PostgreSQL", len(df))
     engine = create_engine(database_url())
 
     try:
@@ -187,6 +193,7 @@ def load_to_postgres(df: pd.DataFrame) -> int:
                     records,
                 )
 
+        logger.info("Upserted %d records into retail_orders", len(records))
         return len(records)
 
     finally:
@@ -194,15 +201,28 @@ def load_to_postgres(df: pd.DataFrame) -> int:
 
 
 def main() -> None:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
+    logger.info("\n========== Pipeline started ==========\n")
     for directory in [CLEAN_FILE.parent, REJECTED_FILE.parent, REPORT_FILE.parent]:
         directory.mkdir(parents=True, exist_ok=True)
 
     raw = load_raw_data(RAW_FILE)
     clean, rejected, report = clean_and_validate(raw)
+    logger.info(
+        "Validation complete: input=%d, valid=%d, rejected=%d, exact_duplicates_removed=%d",
+        report["input_rows"], report["valid_rows"], report["rejected_rows"],
+        report["exact_duplicates_removed"],
+    )
 
     clean.to_csv(CLEAN_FILE, index=False)
+    logger.info("Saved %d valid records to %s", len(clean), CLEAN_FILE)
     rejected.to_csv(REJECTED_FILE, index=False)
+    logger.info("Saved %d rejected records to %s", len(rejected), REJECTED_FILE)
     REPORT_FILE.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    logger.info("Saved quality report to %s", REPORT_FILE)
 
     try:
         loaded = load_to_postgres(clean)
@@ -213,10 +233,12 @@ def main() -> None:
         report["postgres_load_status"] = "failed"
         report["postgres_error"] = str(exc)
         REPORT_FILE.write_text(json.dumps(report, indent=2), encoding="utf-8")
+        logger.exception("PostgreSQL load failed; updated quality report at %s", REPORT_FILE)
         raise
 
     REPORT_FILE.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps(report, indent=2))
+    logger.info("\n========== Pipeline finished successfully ==========\n")
 
 
 if __name__ == "__main__":

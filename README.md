@@ -50,27 +50,31 @@ I use pandas to process the data, SQLAlchemy to interact with PostgreSQL, and Do
 - SQLAlchemy
 - Docker and Docker Compose
 - pytest
+- Python logging
+- GitHub Actions for continuous integration
+
+The GitHub Actions workflow runs the pipeline and test suite on pushes and pull requests targeting `main`.
 
 ## Project structure
 
 ```text
 retail-data-pipeline/
-├── data/
-│   ├── raw/
-│   │   └── orders_dirty.csv
-│   ├── processed/
-│   ├── rejected/
-│   └── reports/
-├── src/
-│   └── pipeline.py
-├── tests/
-│   ├── test_pipeline.py
-│   └── test_postgres.py
-├── Dockerfile
-├── docker-compose.yml
-├── requirements.txt
-├── .env.example
-└── README.md
+|-- data/
+|   |-- raw/
+|   |   `-- orders_dirty.csv
+|   |-- processed/
+|   |-- rejected/
+|   `-- reports/
+|-- src/
+|   `-- pipeline.py
+|-- tests/
+|   |-- test_pipeline.py
+|   `-- test_postgres.py
+|-- Dockerfile
+|-- docker-compose.yml
+|-- requirements.txt
+|-- .env.example
+`-- README.md
 ```
 
 ## How to run the project
@@ -183,16 +187,13 @@ Building this project has helped me practice:
 
 ## What's next?
 
-I want to keep improving this project and explore more Data Engineering tools.
+I want to keep improving this project and explore more Data Engineering tools. Possible next steps are:
 
-Some of the next improvements I'd like to work on are:
-
-- Adding structured logging and better error handling.
-- Setting up automated tests with GitHub Actions.
-- Improving the pipeline for larger datasets.
+- Expanding data quality checks and test coverage.
+- Improving the pipeline to handle larger datasets efficiently.
 - Exploring dbt for analytics transformations.
 - Adding orchestration with Airflow.
-- Exploring a cloud deployment.
+- Exploring deployment to a cloud platform.
 
 ## Data and security
 
