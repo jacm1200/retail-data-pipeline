@@ -126,6 +126,24 @@ The generated files include:
 
 The PostgreSQL table is called `retail_orders`.
 
+### Example quality report
+
+For the included sample CSV, the pipeline produces a report like this:
+
+```json
+{
+  "input_rows": 16,
+  "exact_duplicates_removed": 1,
+  "valid_rows": 11,
+  "rejected_rows": 4,
+  "quality_rate_percent": 68.75,
+  "rows_upserted_to_postgres": 11,
+  "postgres_load_status": "success"
+}
+```
+
+The counts reconcile: 16 input rows result in 11 valid rows, 4 rejected rows, and 1 exact duplicate removed. The quality rate is the percentage of input rows retained as valid records.
+
 ### 4. Run the tests
 
 ```bash
